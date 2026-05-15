@@ -1,0 +1,82 @@
+# ================================
+#  Python & Django
+# ================================
+*.py[cod]
+__pycache__/
+*.pyo
+*.log
+*.pot
+*.pyc
+
+# Django - local database (SQLite)
+db.sqlite3
+db.sqlite3-journal
+
+# Django - collected static files for production
+staticfiles/
+
+# Django - user-uploaded media (if stored locally, but we use S3)
+media/
+
+# Django - log files
+logs/
+!logs/.gitkeep    # keep the placeholder, ignore log contents
+
+# Django - local cache (file-based cache)
+cache/
+
+# ================================
+#  Virtual environment
+# ================================
+venv/
+env/
+.venv/
+.env/
+virtualenv/
+
+# ================================
+#  Environment & secrets
+# ================================
+.env
+*.env
+.aws/
+
+# ================================
+#  Docker
+# ================================
+*.tar.gz               # docker image tarballs sent via CI/CD
+docker-compose.override.yml
+
+# ================================
+#  Terraform
+# ================================
+terraform/.terraform/
+terraform/terraform.tfvars        # contains sensitive passwords
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.backup
+terraform/.terraform.lock.hcl
+
+# ================================
+#  Backups (local copies)
+# ================================
+backups/
+
+# ================================
+#  IDE & editor
+# ================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# ================================
+#  OS files
+# ================================
+.DS_Store
+Thumbs.db
+Desktop.ini

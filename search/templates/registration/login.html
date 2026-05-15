@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-16">
+    <h2 class="text-2xl font-bold text-center mb-8">Welcome back</h2>
+    <form method="post" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 space-y-5">
+        {% csrf_token %}
+        {% if form.errors %}
+        <div class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
+            Invalid username or password. Please try again.
+        </div>
+        {% endif %}
+        <div>
+            <label for="id_username" class="block text-sm font-medium text-slate-700">Username</label>
+            <input type="text" name="username" id="id_username" class="mt-1 block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-brand-500 focus:border-brand-500" required>
+        </div>
+        <div>
+            <label for="id_password" class="block text-sm font-medium text-slate-700">Password</label>
+            <input type="password" name="password" id="id_password" class="mt-1 block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-brand-500 focus:border-brand-500" required>
+        </div>
+        <button type="submit" class="w-full bg-brand-600 text-white py-3 rounded-lg font-semibold hover:bg-brand-700 transition">
+            Sign in
+        </button>
+    </form>
+    <p class="mt-6 text-center text-sm text-slate-500">
+        Don't have an account? <a href="{% url 'register' %}" class="text-brand-600 hover:underline">Sign up</a>
+    </p>
+</div>
+{% endblock %}
