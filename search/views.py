@@ -13,6 +13,7 @@ from django.db.models import Q
 from .models import SearchResult
 from .ranking import calculate_relevance
 
+# just adding a comment.
 
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
 def login_view(request):
