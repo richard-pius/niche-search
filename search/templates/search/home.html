@@ -3,57 +3,52 @@
 
 {% block content %}
 <div class="text-center mb-10">
-    <h1 class="text-4xl font-extrabold text-slate-900 mb-3">Find niche tech gems</h1>
-    <p class="text-slate-500 max-w-xl mx-auto">Search across curated articles from Hacker News, Dev.to, Ars Technica, and more.</p>
+    <h1 class="text-4xl font-extrabold text-slate-900 dark:text-slate-100 mb-3">Find niche tech gems</h1>
+    <p class="text-slate-500 dark:text-slate-400 max-w-xl mx-auto">Search across curated articles from Hacker News, Dev.to, Ars Technica, and Wikipedia.</p>
 </div>
 
-<!-- Search Form -->
 <form method="get" action="{% url 'home' %}" class="flex items-center max-w-xl mx-auto mb-12">
     <div class="relative w-full">
         <input type="text" name="q" value="{{ query }}"
                placeholder="Search topics, tools, frameworks..."
-               class="w-full px-5 py-4 pr-12 text-lg border border-slate-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition">
-        <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-600">
+               class="w-full px-5 py-4 pr-12 text-lg border border-slate-300 dark:border-slate-600 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition
+                      bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500">
+        <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/>
             </svg>
         </button>
     </div>
 </form>
 
 {% if query %}
-    <p class="text-sm text-slate-500 mb-6">
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">
         {{ results.paginator.count }} result{% if results.paginator.count != 1 %}s{% endif %} for “<strong>{{ query }}</strong>”
     </p>
 {% endif %}
 
-<!-- Results List -->
 <div class="space-y-4">
     {% for result in results %}
-    <div class="result-card bg-white border border-slate-200 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start gap-4">
+    <div class="result-card bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start gap-4">
         <div class="flex-1">
-            <a href="{{ result.url }}" target="_blank" rel="noopener" class="text-lg font-semibold text-brand-700 hover:underline">
+            <a href="{{ result.url }}" target="_blank" rel="noopener" class="text-lg font-semibold text-brand-700 dark:text-brand-400 hover:underline">
                 {{ result.title }}
             </a>
-            <p class="text-slate-600 text-sm mt-1 line-clamp-2">{{ result.description }}</p>
-            <span class="inline-block mt-2 text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full">
+            <p class="text-slate-600 dark:text-slate-300 text-sm mt-1 line-clamp-2">{{ result.description }}</p>
+            <span class="inline-block mt-2 text-xs bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-1 rounded-full">
                 {{ result.source_site }}
             </span>
-            <span class="text-xs text-slate-400">Score: {{ result.relevance_score|floatformat:2 }}</span>
+            <!-- RELEVANCE SCORE DISPLAY -->
+            <span class="text-xs text-slate-400 dark:text-slate-500 ml-2">
+                Score: {{ result.relevance_score|floatformat:2 }}
+            </span>
         </div>
         {% if user.is_authenticated %}
         <div class="flex-shrink-0">
             {% if result.is_bookmarked %}
-                <a href="{% url 'bookmark_remove' result.id %}" title="Remove bookmark"
-                   class="inline-flex items-center text-red-500 hover:text-red-700 text-sm font-medium transition">
-                    <span class="mr-1">❤️</span> Saved
-                </a>
+                <a href="{% url 'bookmark_remove' result.id %}" class="inline-flex items-center text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm font-medium transition"><span class="mr-1">❤️</span> Saved</a>
             {% else %}
-                <a href="{% url 'bookmark_add' result.id %}" title="Save bookmark"
-                   class="inline-flex items-center text-slate-400 hover:text-brand-600 text-sm font-medium transition">
-                    <span class="mr-1">🤍</span> Save
-                </a>
+                <a href="{% url 'bookmark_add' result.id %}" class="inline-flex items-center text-slate-400 dark:text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 text-sm font-medium transition"><span class="mr-1">🤍</span> Save</a>
             {% endif %}
         </div>
         {% endif %}
@@ -61,21 +56,20 @@
     {% empty %}
     <div class="text-center py-16">
         <p class="text-4xl mb-4">🔍</p>
-        <p class="text-slate-500 text-lg">No results found. Try a different search term.</p>
+        <p class="text-slate-500 dark:text-slate-400 text-lg">No results found. Try a different search term.</p>
     </div>
     {% endfor %}
 </div>
 
-<!-- Pagination (if any) -->
 {% if results.has_other_pages %}
 <nav class="flex justify-center mt-10">
     <ul class="flex items-center space-x-2 text-sm">
         {% if results.has_previous %}
-        <li><a href="?q={{ query }}&page={{ results.previous_page_number }}" class="px-4 py-2 border rounded-full text-slate-600 hover:bg-slate-100">← Prev</a></li>
+        <li><a href="?q={{ query }}&page={{ results.previous_page_number }}" class="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">← Prev</a></li>
         {% endif %}
-        <li class="px-4 py-2 text-slate-400">{{ results.number }} / {{ results.paginator.num_pages }}</li>
+        <li class="px-4 py-2 text-slate-400 dark:text-slate-500">{{ results.number }} / {{ results.paginator.num_pages }}</li>
         {% if results.has_next %}
-        <li><a href="?q={{ query }}&page={{ results.next_page_number }}" class="px-4 py-2 border rounded-full text-slate-600 hover:bg-slate-100">Next →</a></li>
+        <li><a href="?q={{ query }}&page={{ results.next_page_number }}" class="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Next →</a></li>
         {% endif %}
     </ul>
 </nav>

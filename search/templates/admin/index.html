@@ -1,0 +1,32 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+<div style="margin-bottom: 30px; padding: 20px; background: var(--bg-secondary, #f8f9fa); border-radius: 8px;">
+    <h2 style="margin-top: 0;">📊 Dashboard Overview</h2>
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px; background: white; padding: 15px; border-radius: 6px; text-align: center;">
+            <h3>Scraped Sites</h3>
+            <p style="font-size: 2em; font-weight: bold;">{{ total_results }}</p>
+            <small>Total search results</small>
+        </div>
+        <div style="flex: 1; min-width: 200px; background: white; padding: 15px; border-radius: 6px; text-align: center;">
+            <h3>Users</h3>
+            <p style="font-size: 2em; font-weight: bold;">{{ total_users }}</p>
+            <small>Registered accounts</small>
+        </div>
+        <div style="flex: 1; min-width: 200px; background: white; padding: 15px; border-radius: 6px; text-align: center;">
+            <h3>Bookmarks</h3>
+            <p style="font-size: 2em; font-weight: bold;">{{ total_bookmarks }}</p>
+            <small>Saved bookmarks</small>
+        </div>
+    </div>
+</div>
+
+<div style="margin-bottom: 20px;">
+    <a href="{% url 'admin:auth_user_changelist' %}" class="button" style="padding: 10px 15px; background: var(--brand-600); color: white; border-radius: 4px; text-decoration: none;">
+        👥 Manage Users & Reset Passwords
+    </a>
+</div>
+
+{{ block.super }}
+{% endblock %}

@@ -13,15 +13,19 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # ---------- CUSTOM APPS (before admin) ----------
+    'search.apps.SearchConfig',          # <-- must be above admin
     'storages',
     'django_ratelimit',
-    'search.apps.SearchConfig',
+
+    # ---------- DJANGO ADMIN ----------
+    'django.contrib.admin',              # <-- after search
 ]
 
 MIDDLEWARE = [
