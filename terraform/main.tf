@@ -8,7 +8,7 @@ resource "aws_vpc" "main" {
   tags = { Name = "niche-search-vpc" }
 }
 
-# Subnets
+# Public subnets
 resource "aws_subnet" "public_a" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
@@ -16,6 +16,7 @@ resource "aws_subnet" "public_a" {
   map_public_ip_on_launch = true
   tags = { Name = "public-a" }
 }
+
 resource "aws_subnet" "public_b" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.2.0/24"
@@ -23,24 +24,30 @@ resource "aws_subnet" "public_b" {
   map_public_ip_on_launch = true
   tags = { Name = "public-b" }
 }
+
+# Private subnets for app
 resource "aws_subnet" "private_app_a" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.10.0/24"
   availability_zone = "${var.region}a"
   tags = { Name = "private-app-a" }
 }
+
 resource "aws_subnet" "private_app_b" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.11.0/24"
   availability_zone = "${var.region}b"
   tags = { Name = "private-app-b" }
 }
+
+# Private subnets for database
 resource "aws_subnet" "private_db_a" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.20.0/24"
   availability_zone = "${var.region}a"
   tags = { Name = "private-db-a" }
 }
+
 resource "aws_subnet" "private_db_b" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.21.0/24"
@@ -53,16 +60,27 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 }
 
-# NAT instance (t2.micro, free tier)
+# NAT instance security group
 resource "aws_security_group" "nat" {
   name        = "nat-sg"
   vpc_id      = aws_vpc.main.id
+  
+  # Allow internal VPC traffic for NAT routing
   ingress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = [aws_vpc.main.cidr_block]
   }
+
+  # Allow SSH access from the internet so PuTTY can connect
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -71,6 +89,7 @@ resource "aws_security_group" "nat" {
   }
 }
 
+# Amazon Linux 2 AMI for NAT
 data "aws_ami" "amazon_linux_2" {
   most_recent = true
   owners      = ["amazon"]
@@ -80,9 +99,10 @@ data "aws_ami" "amazon_linux_2" {
   }
 }
 
+# NAT EC2 Instance
 resource "aws_instance" "nat" {
   ami                    = data.aws_ami.amazon_linux_2.id
-  instance_type          = "t2.micro"
+  instance_type          = "t3.micro" 
   subnet_id              = aws_subnet.public_a.id
   vpc_security_group_ids = [aws_security_group.nat.id]
   source_dest_check      = false
@@ -97,7 +117,7 @@ resource "aws_instance" "nat" {
   EOF
 }
 
-# Route tables
+# Public route table
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
   route {
@@ -105,34 +125,42 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.igw.id
   }
 }
+
 resource "aws_route_table_association" "public_a" {
   subnet_id      = aws_subnet.public_a.id
   route_table_id = aws_route_table.public.id
 }
+
 resource "aws_route_table_association" "public_b" {
   subnet_id      = aws_subnet.public_b.id
   route_table_id = aws_route_table.public.id
 }
 
+# Private route table 
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
+
   route {
-    cidr_block  = "0.0.0.0/0"
-    instance_id = aws_instance.nat.id
+    cidr_block           = "0.0.0.0/0"
+    network_interface_id = aws_instance.nat.primary_network_interface_id
   }
 }
+
 resource "aws_route_table_association" "private_app_a" {
   subnet_id      = aws_subnet.private_app_a.id
   route_table_id = aws_route_table.private.id
 }
+
 resource "aws_route_table_association" "private_app_b" {
   subnet_id      = aws_subnet.private_app_b.id
   route_table_id = aws_route_table.private.id
 }
+
 resource "aws_route_table_association" "private_db_a" {
   subnet_id      = aws_subnet.private_db_a.id
   route_table_id = aws_route_table.private.id
 }
+
 resource "aws_route_table_association" "private_db_b" {
   subnet_id      = aws_subnet.private_db_b.id
   route_table_id = aws_route_table.private.id
@@ -175,7 +203,7 @@ resource "aws_security_group" "web" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [aws_subnet.public_a.cidr_block]   # SSH from bastion
+    cidr_blocks = [aws_subnet.public_a.cidr_block]   # only from bastion
   }
   egress {
     from_port   = 0
@@ -196,7 +224,7 @@ resource "aws_security_group" "db" {
   }
 }
 
-# ALB
+# Application Load Balancer
 resource "aws_lb" "app" {
   name               = "niche-search-alb"
   internal           = false
@@ -226,7 +254,7 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-# EC2 Instance (Ubuntu 22.04)
+# Ubuntu AMI for the app server
 data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["099720109477"]
@@ -236,9 +264,10 @@ data "aws_ami" "ubuntu" {
   }
 }
 
+# App EC2 Instance
 resource "aws_instance" "app" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t2.micro"
+  instance_type          = "t3.micro" 
   subnet_id              = aws_subnet.private_app_a.id
   vpc_security_group_ids = [aws_security_group.web.id]
   iam_instance_profile   = aws_iam_instance_profile.app_profile.name
@@ -264,10 +293,11 @@ resource "aws_db_subnet_group" "db" {
   subnet_ids = [aws_subnet.private_db_a.id, aws_subnet.private_db_b.id]
 }
 
+# Database Instance 
 resource "aws_db_instance" "app" {
   identifier           = "niche-search-db"
   engine               = "postgres"
-  engine_version       = "15.4"
+  engine_version       = "15" 
   instance_class       = "db.t3.micro"
   allocated_storage    = 20
   db_name              = "niche_search"
@@ -283,10 +313,12 @@ resource "aws_db_instance" "app" {
 resource "random_id" "bucket_suffix" {
   byte_length = 4
 }
+
 resource "aws_s3_bucket" "media" {
   bucket        = "niche-search-media-${random_id.bucket_suffix.hex}"
   force_destroy = true
 }
+
 resource "aws_s3_bucket_public_access_block" "media" {
   bucket                  = aws_s3_bucket.media.id
   block_public_acls       = true
