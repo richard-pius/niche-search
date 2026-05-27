@@ -25,7 +25,10 @@ A **DevSecOps capstone project** that delivers a secure, cost‑optimised, and b
 
 ## 🏗️ Architecture
 
-![Architecture Diagram](docs/architecture.png) *(optional – add your diagram here)*
+Architecture Diagram 
+
+<img width="6369" height="3416" alt="deepseek_mermaid_20260527_e73595" src="https://github.com/user-attachments/assets/bea07d09-f535-4b48-a5e2-3a1969c088a4" />
+
 
 ```
 User → ALB (public subnet) → EC2 (private subnet)
@@ -39,7 +42,6 @@ User → ALB (public subnet) → EC2 (private subnet)
 - **Scraping**: Dedicated Django management commands (`run_scraper.py`, `populate_wikipedia.py`).  
 - **Cloud Deployment**: Fully automated with **Terraform** (VPC, subnets, security groups, EC2, RDS, S3, ALB, IAM).
 
-Full architecture details → [ARCHITECTURE.md](docs/ARCHITECTURE.md) *(if you add one)*.
 
 ---
 
