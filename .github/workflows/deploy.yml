@@ -1,0 +1,28 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH Jump Host
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.APP_PRIVATE_IP }}
+          username: ubuntu
+          key: ${{ secrets.SSH_KEY }}
+          proxy_host: ${{ secrets.BASTION_IP }}
+          proxy_username: ec2-user
+          proxy_key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /opt/ninche-search
+            sudo git pull origin main
+            sudo docker build -t niche-search .
+            sudo docker stop niche-search || true
+            sudo docker rm niche-search || true
+            sudo docker run -d --name niche-search --restart unless-stopped -p 127.0.0.1:8000:8000 --env-file .env -v /opt/ninche-search/logs:/app/logs niche-search
