@@ -32,14 +32,14 @@ A **DevSecOps capstone project** that delivers a secure, cost‑optimised, and b
 
 ```mermaid
 graph TD
-    subgraph "Local Development (Windows)"
+    subgraph "Local Development (Windows/Linux/macOS)"
         A[Developer] -->|runs| B(populate_wikipedia.py)
         A -->|runs| C(run_scraper.py)
         B -->|saves| D[(SQLite / RDS)]
         C -->|saves| D
     end
 
-    subgraph "AWS Cloud (us-east-1)"
+    subgraph "AWS Cloud (us-east-1 / ap-south-1)"
         subgraph "VPC 10.0.0.0/16"
             subgraph "Public Subnets"
                 IGW[Internet Gateway]
@@ -90,16 +90,18 @@ graph TD
 | Backend             | Django 4.2, Python 3.11                                                    |
 | Web Server          | Gunicorn (WSGI)                                                            |
 | Reverse Proxy       | Nginx                                                                      |
-| Database            | PostgreSQL (AWS RDS) / SQLite (local dev)                                  |
+| Database (prod)     | PostgreSQL (AWS RDS)                                                       |
+| Database (dev)      | SQLite                                                                     |
 | Storage             | AWS S3 (django‑storages + boto3)                                           |
-| Frontend            | Tailwind CSS (CDN), minimal HTML5 templates with dark mode support         |
+| Frontend            | Tailwind CSS (CDN), HTML5 (dark mode support)                              |
 | Scraping            | BeautifulSoup4, Requests, wikipedia‑api                                    |
 | Security            | django‑ratelimit, Django security middlewares, HSTS, SSH hardening, UFW    |
 | Containerisation    | Docker                                                                     |
-| Infrastructure      | Terraform (AWS VPC, EC2, RDS, S3, ALB, IAM)                               |
+| Infrastructure      | Terraform (AWS VPC, EC2, RDS, S3, ALB, IAM, CloudWatch alarm)              |
 | CI/CD               | GitHub Actions                                                             |
 | Monitoring          | AWS CloudWatch (logs, CPU alarms)                                          |
 | Backup              | Shell script + cron (pg_dump, s3 sync)                                     |
+| Version Control     | Git + GitHub                                                               |
 
 ---
 
@@ -107,21 +109,10 @@ graph TD
 
 ```
 niche_search_project/
-├── niche_search/                 # Django project settings
+├── niche_search/                 # Django project settings (settings.py, urls.py, etc.)
 ├── search/                       # Main application
 │   ├── management/commands/      # run_scraper.py, populate_wikipedia.py
-│   ├── templates/
-│   │   ├── admin/
-│   │   │   └── index.html        # Custom admin dashboard
-│   │   ├── search/
-│   │   │   ├── home.html
-│   │   │   ├── bookmarks.html
-│   │   │   └── profile.html
-│   │   └── registration/
-│   │       ├── login.html
-│   │       ├── register.html
-│   │       ├── password_change_form.html
-│   │       └── password_change_done.html
+│   ├── templates/                # base.html, home.html, admin/index.html, etc.
 │   ├── models.py                 # SearchResult, UserBookmark, UserProfile
 │   ├── views.py                  # Search, login, bookmarks, profile
 │   ├── urls.py
@@ -159,7 +150,7 @@ niche_search_project/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/niche_search.git
+git clone https://github.com/YOUR_GITHUB_USERNAME/niche_search_project.git
 cd niche_search_project
 ```
 
@@ -235,6 +226,7 @@ SSH into the EC2 instance (via the NAT/bastion) and create `/opt/niche-search/.e
 
 ```bash
 cd /opt/niche-search
+git pull
 docker build -t niche-search .
 docker run -d --name niche-search --restart unless-stopped \
     -p 127.0.0.1:8000:8000 \
@@ -243,7 +235,12 @@ docker run -d --name niche-search --restart unless-stopped \
     niche-search
 ```
 
-#### d) Set up Nginx, firewall, SSH hardening (see full guide below)
+#### d) Set up Nginx, firewall, SSH hardening
+
+See the full deployment guide in the project report. Key steps:
+- Nginx reverse proxy on port 80 → `127.0.0.1:8000`
+- `PermitRootLogin no`, `PasswordAuthentication no` in `/etc/ssh/sshd_config`
+- UFW: allow SSH from bastion subnet, HTTP from VPC
 
 #### e) Migrate & load data on the cloud database
 
